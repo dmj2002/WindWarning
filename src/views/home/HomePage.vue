@@ -39,12 +39,12 @@ const confirm = () => {
   <div class="form-container">
     <!-- Steps -->
     <el-steps :active="activeStep" align-center finish-status="success">
-      <el-step title="1. 基本信息配置"></el-step>
-      <el-step title="2. 测点选择"></el-step>
-      <el-step title="3. 测点参数配置"></el-step>
-      <el-step title="4. 工况模式配置"></el-step>
-      <el-step title="5. 训练样本选择"></el-step>
-      <el-step title="6. 模型训练"></el-step>
+      <el-step title="基本信息配置"></el-step>
+      <el-step title="测点选择"></el-step>
+      <el-step title="测点参数配置"></el-step>
+      <el-step title="工况模式配置"></el-step>
+      <el-step title="训练样本选择"></el-step>
+      <el-step title="模型训练"></el-step>
     </el-steps>
 
     <!-- Form -->
@@ -144,6 +144,7 @@ const confirm = () => {
   max-width: 100%;
   margin: 0 auto;
   padding: 10px;
+  background-color: white;
 }
 
 .form-content {
