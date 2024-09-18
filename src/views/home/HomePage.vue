@@ -10,7 +10,9 @@ const form = ref({
   singlePointWarning: 5,
   dataGovernance: true,
   creationDate: new Date(),
-  lastModifiedDate: new Date()
+  lastModifiedDate: new Date(),
+  creatBy: 'admin',
+  lastModifiedBy: 'admin'
 })
 const prevStep = () => {
   activeStep.value--
@@ -100,6 +102,10 @@ const confirm = () => {
           ></el-date-picker>
         </el-form-item>
 
+        <el-form-item label="创建人">
+          <el-input v-model="form.creatBy" placeholder="请输入版本" disabled></el-input>
+        </el-form-item>
+
         <el-form-item label="最后修改日期">
           <el-date-picker
             v-model="form.lastModifiedDate"
@@ -107,6 +113,10 @@ const confirm = () => {
             placeholder="选择最后修改日期"
             disabled
           ></el-date-picker>
+        </el-form-item>
+
+        <el-form-item label="修改人">
+          <el-input v-model="form.lastModifiedBy" placeholder="请输入版本" disabled></el-input>
         </el-form-item>
       </template>
 
