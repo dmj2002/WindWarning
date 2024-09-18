@@ -1,8 +1,14 @@
 <script setup>
-import 'element-plus/dist/index.css'
-import { useRoute } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { User } from '@element-plus/icons-vue'
+
+const router = useRouter()
 const route = useRoute()
+
+function logout() {
+  // 处理退出逻辑，例如清除用户信息并跳转到登录页面
+  router.push('/login')
+}
 </script>
 
 <template>

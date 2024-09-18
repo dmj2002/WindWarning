@@ -18,7 +18,13 @@ const loginForm = ref({
           <el-input v-model="loginForm.username" placeholder="请输入用户名" :prefix-icon="User"></el-input>
         </el-form-item>
         <el-form-item>
-          <el-input v-model="loginForm.password" placeholder="请输入密码" :prefix-icon="Lock"></el-input>
+          <el-input
+            v-model="loginForm.password"
+            placeholder="请输入密码"
+            :prefix-icon="Lock"
+            type="password"
+            show-password
+          ></el-input>
         </el-form-item>
         <el-form-item class="flex">
           <div class="flex">
