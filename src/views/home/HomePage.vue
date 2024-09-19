@@ -23,6 +23,7 @@ const radioGroup = ref('本设备') // 单选按钮组的值
 const currentPage = ref(1) // 当前页码
 const pageSize = ref(10) // 每页显示的行数
 const selectedRows = ref([]) // 表格中选中的行
+const tableRef = ref(null) // 表格的引用
 const tableData = ref([
   { code: '10BAT10CE301', name: '主变高压侧电压UAB1', sisCode: '01:10BAT10CE200X', sisName: '主变高压侧线电压AB' },
   { code: '10BAT10CE701', name: '主变高压侧有功功率1', sisCode: '01:10BAT10CE300X', sisName: '主变高压侧无功功率' },
@@ -39,6 +40,11 @@ const tableData = ref([
   { code: '10BAT10CT101', name: '主变A相绕组温度', sisCode: '01:10BAT10CT100X', sisName: '主变A相绕组温度' }
 ]) // 表格中的数据
 const selectedTableData = ref([]) // 已选择的测点数据
+// 处理多选
+const handleSelectionChange = (val) => {
+  selectedRows.value = val
+  console.log('Selected rows:', selectedRows.value)
+}
 // 根据搜索框内容过滤表格数据
 const filteredTableData = computed(() => {
   if (searchQuery.value) {
@@ -54,6 +60,30 @@ const paginatedTableData = computed(() => {
   const end = start + pageSize.value
   return filteredTableData.value.slice(start, end)
 })
+// 将选中的行移动到右边
+const moveSelectedRowsToSelectedTable = () => {
+  selectedRows.value.forEach((row) => {
+    if (!selectedTableData.value.some((item) => item.code === row.code)) {
+      selectedTableData.value.push(row)
+    }
+  })
+  selectedRows.value = []
+  tableRef.value.clearSelection()
+}
+const moveSelectedRowsBack = () => {}
+
+// action-3
+const pointdata = ref([
+  {
+    name: '高厂变压器测电流1',
+    upperLimit: 10,
+    lowerLimit: -10,
+    guidance: '100-200',
+    unit: 'A',
+    participate: true,
+    category: '普通测点'
+  }
+])
 
 const prevStep = () => {
   activeStep.value--
@@ -174,16 +204,18 @@ const confirm = () => {
 
             <el-table
               stripe
+              ref="tableRef"
               v-model:selected-rows="selectedRows"
               :data="paginatedTableData"
               style="width: 100%"
+              @selection-change="handleSelectionChange"
               :header-cell-style="{ backgroundColor: '#f5f7fa', color: '#333', fontWeight: 'bold' }"
             >
-              <el-table-column type="selection" width="50"></el-table-column>
-              <el-table-column prop="code" label="测点编码" width="180"></el-table-column>
-              <el-table-column prop="name" label="测点名称" width="250"></el-table-column>
-              <el-table-column prop="sisCode" label="SIS测点编码" width="180"></el-table-column>
-              <el-table-column prop="sisName" label="SIS测点名称" width="250"></el-table-column>
+              <el-table-column type="selection"></el-table-column>
+              <el-table-column prop="code" label="测点编码"></el-table-column>
+              <el-table-column prop="name" label="测点名称"></el-table-column>
+              <el-table-column prop="sisCode" label="SIS测点编码"></el-table-column>
+              <el-table-column prop="sisName" label="SIS测点名称"></el-table-column>
             </el-table>
 
             <!-- 分页 -->
@@ -222,15 +254,95 @@ const confirm = () => {
               style="width: 100%"
               :header-cell-style="{ backgroundColor: '#f5f7fa', color: '#333', fontWeight: 'bold' }"
             >
-              <el-table-column type="selection" width="50"></el-table-column>
-              <el-table-column prop="code" label="测点编码" width="180"></el-table-column>
-              <el-table-column prop="name" label="测点名称" width="250"></el-table-column>
-              <el-table-column prop="sisCode" label="SIS测点编码" width="180"></el-table-column>
-              <el-table-column prop="sisName" label="SIS测点名称" width="250"></el-table-column>
+              <el-table-column type="selection"></el-table-column>
+              <el-table-column prop="code" label="测点编码"></el-table-column>
+              <el-table-column prop="name" label="测点名称"></el-table-column>
+              <el-table-column prop="sisCode" label="SIS测点编码"></el-table-column>
+              <el-table-column prop="sisName" label="SIS测点名称"></el-table-column>
             </el-table>
           </div>
         </div>
       </template>
+
+      <!-- Step 3: Point Parameter Configuration -->
+      <template v-if="activeStep === 2">
+        <div style="width: 100%">
+          <!-- 批量编辑按钮 -->
+          <el-button type="primary" style="margin-bottom: 20px">批量编辑</el-button>
+
+          <!-- 表格部分 -->
+          <el-table :data="pointdata" border style="width: 100%">
+            <!-- 表格列 -->
+            <el-table-column type="selection"> </el-table-column>
+
+            <el-table-column prop="name" label="测点名称">
+              <template #default="scope">
+                <el-input v-model="scope.row.name" :disabled="true"></el-input>
+              </template>
+            </el-table-column>
+
+            <el-table-column prop="upperLimit" label="残差上限">
+              <template #default="scope">
+                <el-input v-model="scope.row.upperLimit"></el-input>
+              </template>
+            </el-table-column>
+
+            <el-table-column prop="lowerLimit" label="残差下限">
+              <template #default="scope">
+                <el-input v-model="scope.row.lowerLimit"></el-input>
+              </template>
+            </el-table-column>
+
+            <el-table-column prop="guidance" label="指导值">
+              <template #default="scope">
+                <el-input v-model="scope.row.guidance"></el-input>
+              </template>
+            </el-table-column>
+
+            <el-table-column prop="unit" label="工程单位">
+              <template #default="scope">
+                <el-input v-model="scope.row.unit"></el-input>
+              </template>
+            </el-table-column>
+
+            <el-table-column prop="participate" label="是否参与计算">
+              <template #default="scope">
+                <el-radio-group v-model="scope.row.participate">
+                  <el-radio :label="true">是</el-radio>
+                  <el-radio :label="false">否</el-radio>
+                </el-radio-group>
+              </template>
+            </el-table-column>
+
+            <el-table-column prop="category" label="测点类别">
+              <template #default="scope">
+                <el-input v-model="scope.row.category" :disabled="true"></el-input>
+              </template>
+            </el-table-column>
+          </el-table>
+
+          <!-- 分页 -->
+          <div class="pagination-container">
+            <el-pagination
+              background
+              layout="prev, pager, next"
+              :page-size="20"
+              :total="1"
+              style="margin-top: 20px; text-align: right"
+            >
+            </el-pagination>
+          </div>
+        </div>
+      </template>
+
+      <!-- Step 4: Operating Mode Configuration -->
+      <template v-if="activeStep === 3"> </template>
+
+      <!-- Step 5: Training Sample Selection -->
+      <template v-if="activeStep === 4"> </template>
+
+      <!-- Step 6: Model Training -->
+      <template v-if="activeStep === 5"> </template>
 
       <!-- Actions -->
       <div class="span-container"></div>
@@ -259,7 +371,6 @@ const confirm = () => {
   background-color: white;
   height: 100%;
 }
-
 .form-content {
   display: flex;
   flex-wrap: wrap;
@@ -277,16 +388,14 @@ const confirm = () => {
   gap: 15px;
   width: 8%;
 }
-
 .button-container {
   width: 100%;
-  display: flex;
-  justify-content: center; /* 水平居中对齐按钮 */
-  gap: 10px; /* 按钮之间的间距 */
+  text-align: center; /* 按钮居中 */
 }
 .point-selection {
   display: flex;
   flex-direction: row;
+  width: 100%;
 }
 .table-container {
   width: 45%;
