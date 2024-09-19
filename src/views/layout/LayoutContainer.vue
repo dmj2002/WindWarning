@@ -42,10 +42,16 @@ function logout() {
       </el-dropdown>
     </div>
   </el-menu>
-  <router-view></router-view>
+  <div class="content">
+    <router-view></router-view>
+  </div>
 </template>
 
 <style scoped>
+.content {
+  flex-grow: 1;
+  overflow: auto;
+}
 .title {
   font-size: 24px;
   font-weight: bold;
