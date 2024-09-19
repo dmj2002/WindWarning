@@ -390,8 +390,11 @@ const confirm = () => {
 }
 .button-container {
   width: 100%;
-  text-align: center; /* 按钮居中 */
+  display: flex;
+  justify-content: center; /* 水平居中对齐按钮 */
+  gap: 10px; /* 按钮之间的间距 */
 }
+
 .point-selection {
   display: flex;
   flex-direction: row;
