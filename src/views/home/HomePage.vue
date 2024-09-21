@@ -1,22 +1,15 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { ArrowLeft, ArrowRight } from '@element-plus/icons-vue'
+import StepOne from '@/components/StepOne.vue'
 const activeStep = ref(0)
 // action-1
-const form = ref({
-  modelName: '',
-  version: 'V1.0',
-  device: '',
-  trainingInterval: 10,
-  alarmDuration: 300,
-  singlePointWarning: 5,
-  dataGovernance: true,
-  creationDate: new Date(),
-  lastModifiedDate: new Date(),
-  creatBy: 'admin',
-  lastModifiedBy: 'admin'
+const StepRef1 = ref('')
+onMounted(() => {
+  if (StepRef1.value) {
+    console.log('子组件的表单:', StepRef1.value.form)
+  }
 })
-
 // action-2
 const searchQuery = ref('') // 搜索框输入的值
 const radioGroup = ref('本设备') // 单选按钮组的值
@@ -116,248 +109,177 @@ const confirm = () => {
       <el-step title="模型训练"></el-step>
     </el-steps>
 
-    <!-- Form -->
-    <el-form :model="form" label-width="120px" class="form-content">
-      <!-- Step 1: Basic Information -->
-      <template v-if="activeStep === 0">
-        <div class="span-container">
-          <span>基本信息</span>
-        </div>
-        <el-form-item label="模型名称" required>
-          <el-input v-model="form.modelName" placeholder="请输入模型名称"></el-input>
-        </el-form-item>
+    <!-- Step 1: Basic Information -->
+    <StepOne ref="StepRef1" v-show="activeStep === 0" />
 
-        <el-form-item label="版本" required>
-          <el-input v-model="form.version" placeholder="请输入版本" readonly></el-input>
-        </el-form-item>
-
-        <el-form-item label="设备">
-          <el-select v-model="form.device" placeholder="请选择设备">
-            <el-option label="电力输出与厂用电(B)" value="电力输出与厂用电(B)"></el-option>
-            <!-- 添加更多选项 -->
-          </el-select>
-        </el-form-item>
-
-        <!-- Additional Configuration -->
-        <el-form-item label="训练采样间隔" required>
-          <el-input-number v-model="form.trainingInterval" :min="1" placeholder="请输入训练采样间隔"></el-input-number>
-        </el-form-item>
-
-        <el-form-item label="告警持续时间">
-          <el-input-number v-model="form.alarmDuration" :min="1" placeholder="请输入告警持续时间"></el-input-number>
-        </el-form-item>
-
-        <el-form-item label="单测点预警">
-          <el-input-number v-model="form.singlePointWarning" :min="1" placeholder="请输入单测点预警"></el-input-number>
-        </el-form-item>
-
-        <el-form-item label="是否数据治理" required>
-          <el-radio-group v-model="form.dataGovernance">
-            <el-radio :label="true">是</el-radio>
-            <el-radio :label="false">否</el-radio>
+    <!-- Step 2: Point Selection -->
+    <template v-if="activeStep === 1">
+      <div class="point-selection">
+        <div class="table-container">
+          <!-- 左侧可选测点 -->
+          <el-input v-model="searchQuery" placeholder="请输入测点编码或名称"></el-input>
+          <el-radio-group v-model="radioGroup">
+            <el-radio label="本设备">本设备</el-radio>
+            <el-radio label="本机组">本机组</el-radio>
+            <el-radio label="主参数">主参数</el-radio>
+            <el-radio label="机组公用">机组公用</el-radio>
           </el-radio-group>
-        </el-form-item>
 
-        <div class="span-container">
-          <span>维护信息</span>
-        </div>
-        <!-- Maintenance Information -->
-        <el-form-item label="创建日期">
-          <el-date-picker
-            v-model="form.creationDate"
-            type="datetime"
-            placeholder="选择创建日期"
-            disabled
-          ></el-date-picker>
-        </el-form-item>
-
-        <el-form-item label="创建人">
-          <el-input v-model="form.creatBy" placeholder="请输入版本" disabled></el-input>
-        </el-form-item>
-
-        <el-form-item label="最后修改日期">
-          <el-date-picker
-            v-model="form.lastModifiedDate"
-            type="datetime"
-            placeholder="选择最后修改日期"
-            disabled
-          ></el-date-picker>
-        </el-form-item>
-
-        <el-form-item label="修改人">
-          <el-input v-model="form.lastModifiedBy" placeholder="请输入版本" disabled></el-input>
-        </el-form-item>
-      </template>
-
-      <!-- Step 2: Point Selection -->
-      <template v-if="activeStep === 1">
-        <div class="point-selection">
-          <div class="table-container">
-            <!-- 左侧可选测点 -->
-            <el-input v-model="searchQuery" placeholder="请输入测点编码或名称"></el-input>
-            <el-radio-group v-model="radioGroup">
-              <el-radio label="本设备">本设备</el-radio>
-              <el-radio label="本机组">本机组</el-radio>
-              <el-radio label="主参数">主参数</el-radio>
-              <el-radio label="机组公用">机组公用</el-radio>
-            </el-radio-group>
-
-            <el-table
-              stripe
-              ref="tableRef"
-              v-model:selected-rows="selectedRows"
-              :data="paginatedTableData"
-              style="width: 100%"
-              @selection-change="handleSelectionChange"
-              :header-cell-style="{ backgroundColor: '#f5f7fa', color: '#333', fontWeight: 'bold' }"
-            >
-              <el-table-column type="selection"></el-table-column>
-              <el-table-column prop="code" label="测点编码"></el-table-column>
-              <el-table-column prop="name" label="测点名称"></el-table-column>
-              <el-table-column prop="sisCode" label="SIS测点编码"></el-table-column>
-              <el-table-column prop="sisName" label="SIS测点名称"></el-table-column>
-            </el-table>
-
-            <!-- 分页 -->
-            <div class="pagination-container">
-              <el-pagination
-                v-model:current-page="currentPage"
-                background
-                :page-size="pageSize"
-                :total="tableData.length"
-                layout="prev, pager, next, jumper"
-              />
-            </div>
-          </div>
-
-          <!-- 中间按钮 -->
-          <div class="button">
-            <el-button
-              @click="moveSelectedRowsToSelectedTable"
-              type="primary"
-              :icon="ArrowRight"
-              style="margin: 10px 15px"
-            >
-            </el-button>
-            <el-button @click="moveSelectedRowsBack" type="primary" :icon="ArrowLeft" style="margin: 10px 15px">
-            </el-button>
-          </div>
-
-          <!-- 右侧已选测点 -->
-          <div class="table-container">
-            <el-input v-model="searchQuery" placeholder="请输入测点编码或名称"></el-input>
-            <el-button>批量上移</el-button>
-            <el-button>批量下移</el-button>
-            <el-button>清空列表</el-button>
-            <el-table
-              :data="selectedTableData"
-              style="width: 100%"
-              :header-cell-style="{ backgroundColor: '#f5f7fa', color: '#333', fontWeight: 'bold' }"
-            >
-              <el-table-column type="selection"></el-table-column>
-              <el-table-column prop="code" label="测点编码"></el-table-column>
-              <el-table-column prop="name" label="测点名称"></el-table-column>
-              <el-table-column prop="sisCode" label="SIS测点编码"></el-table-column>
-              <el-table-column prop="sisName" label="SIS测点名称"></el-table-column>
-            </el-table>
-          </div>
-        </div>
-      </template>
-
-      <!-- Step 3: Point Parameter Configuration -->
-      <template v-if="activeStep === 2">
-        <div style="width: 100%">
-          <!-- 批量编辑按钮 -->
-          <el-button type="primary" style="margin-bottom: 20px">批量编辑</el-button>
-
-          <!-- 表格部分 -->
-          <el-table :data="pointdata" border style="width: 100%">
-            <!-- 表格列 -->
-            <el-table-column type="selection"> </el-table-column>
-
-            <el-table-column prop="name" label="测点名称">
-              <template #default="scope">
-                <el-input v-model="scope.row.name" :disabled="true"></el-input>
-              </template>
-            </el-table-column>
-
-            <el-table-column prop="upperLimit" label="残差上限">
-              <template #default="scope">
-                <el-input v-model="scope.row.upperLimit"></el-input>
-              </template>
-            </el-table-column>
-
-            <el-table-column prop="lowerLimit" label="残差下限">
-              <template #default="scope">
-                <el-input v-model="scope.row.lowerLimit"></el-input>
-              </template>
-            </el-table-column>
-
-            <el-table-column prop="guidance" label="指导值">
-              <template #default="scope">
-                <el-input v-model="scope.row.guidance"></el-input>
-              </template>
-            </el-table-column>
-
-            <el-table-column prop="unit" label="工程单位">
-              <template #default="scope">
-                <el-input v-model="scope.row.unit"></el-input>
-              </template>
-            </el-table-column>
-
-            <el-table-column prop="participate" label="是否参与计算">
-              <template #default="scope">
-                <el-radio-group v-model="scope.row.participate">
-                  <el-radio :label="true">是</el-radio>
-                  <el-radio :label="false">否</el-radio>
-                </el-radio-group>
-              </template>
-            </el-table-column>
-
-            <el-table-column prop="category" label="测点类别">
-              <template #default="scope">
-                <el-input v-model="scope.row.category" :disabled="true"></el-input>
-              </template>
-            </el-table-column>
+          <el-table
+            stripe
+            ref="tableRef"
+            v-model:selected-rows="selectedRows"
+            :data="paginatedTableData"
+            style="width: 100%"
+            @selection-change="handleSelectionChange"
+            :header-cell-style="{ backgroundColor: '#f5f7fa', color: '#333', fontWeight: 'bold' }"
+          >
+            <el-table-column type="selection"></el-table-column>
+            <el-table-column prop="code" label="测点编码"></el-table-column>
+            <el-table-column prop="name" label="测点名称"></el-table-column>
+            <el-table-column prop="sisCode" label="SIS测点编码"></el-table-column>
+            <el-table-column prop="sisName" label="SIS测点名称"></el-table-column>
           </el-table>
 
           <!-- 分页 -->
           <div class="pagination-container">
             <el-pagination
+              v-model:current-page="currentPage"
               background
-              layout="prev, pager, next"
-              :page-size="20"
-              :total="1"
-              style="margin-top: 20px; text-align: right"
-            >
-            </el-pagination>
+              :page-size="pageSize"
+              :total="tableData.length"
+              layout="prev, pager, next, jumper"
+            />
           </div>
         </div>
-      </template>
 
-      <!-- Step 4: Operating Mode Configuration -->
-      <template v-if="activeStep === 3"> </template>
+        <!-- 中间按钮 -->
+        <div class="button">
+          <el-button
+            @click="moveSelectedRowsToSelectedTable"
+            type="primary"
+            :icon="ArrowRight"
+            style="margin: 10px 15px"
+          >
+          </el-button>
+          <el-button @click="moveSelectedRowsBack" type="primary" :icon="ArrowLeft" style="margin: 10px 15px">
+          </el-button>
+        </div>
 
-      <!-- Step 5: Training Sample Selection -->
-      <template v-if="activeStep === 4"> </template>
-
-      <!-- Step 6: Model Training -->
-      <template v-if="activeStep === 5"> </template>
-
-      <!-- Actions -->
-      <div class="span-container"></div>
-      <div class="button-container">
-        <el-button v-if="activeStep > 0" type="primary" @click="prevStep">上一步</el-button>
-        <el-button v-if="activeStep < 5" type="primary" @click="nextStep">下一步</el-button>
-        <el-button v-if="activeStep === 5" type="primary" @click="confirm">确定</el-button>
-        <el-button type="primary" @click="save">暂存</el-button>
-        <el-button type="primary" @click="close">关闭</el-button>
+        <!-- 右侧已选测点 -->
+        <div class="table-container">
+          <el-input v-model="searchQuery" placeholder="请输入测点编码或名称"></el-input>
+          <el-button>批量上移</el-button>
+          <el-button>批量下移</el-button>
+          <el-button>清空列表</el-button>
+          <el-table
+            :data="selectedTableData"
+            style="width: 100%"
+            :header-cell-style="{ backgroundColor: '#f5f7fa', color: '#333', fontWeight: 'bold' }"
+          >
+            <el-table-column type="selection"></el-table-column>
+            <el-table-column prop="code" label="测点编码"></el-table-column>
+            <el-table-column prop="name" label="测点名称"></el-table-column>
+            <el-table-column prop="sisCode" label="SIS测点编码"></el-table-column>
+            <el-table-column prop="sisName" label="SIS测点名称"></el-table-column>
+          </el-table>
+        </div>
       </div>
-    </el-form>
+    </template>
+
+    <!-- Step 3: Point Parameter Configuration -->
+    <template v-if="activeStep === 2">
+      <div style="width: 100%">
+        <!-- 批量编辑按钮 -->
+        <el-button type="primary" style="margin-bottom: 20px">批量编辑</el-button>
+
+        <!-- 表格部分 -->
+        <el-table :data="pointdata" border style="width: 100%">
+          <!-- 表格列 -->
+          <el-table-column type="selection"> </el-table-column>
+
+          <el-table-column prop="name" label="测点名称">
+            <template #default="scope">
+              <el-input v-model="scope.row.name" :disabled="true"></el-input>
+            </template>
+          </el-table-column>
+
+          <el-table-column prop="upperLimit" label="残差上限">
+            <template #default="scope">
+              <el-input v-model="scope.row.upperLimit"></el-input>
+            </template>
+          </el-table-column>
+
+          <el-table-column prop="lowerLimit" label="残差下限">
+            <template #default="scope">
+              <el-input v-model="scope.row.lowerLimit"></el-input>
+            </template>
+          </el-table-column>
+
+          <el-table-column prop="guidance" label="指导值">
+            <template #default="scope">
+              <el-input v-model="scope.row.guidance"></el-input>
+            </template>
+          </el-table-column>
+
+          <el-table-column prop="unit" label="工程单位">
+            <template #default="scope">
+              <el-input v-model="scope.row.unit"></el-input>
+            </template>
+          </el-table-column>
+
+          <el-table-column prop="participate" label="是否参与计算">
+            <template #default="scope">
+              <el-radio-group v-model="scope.row.participate">
+                <el-radio :label="true">是</el-radio>
+                <el-radio :label="false">否</el-radio>
+              </el-radio-group>
+            </template>
+          </el-table-column>
+
+          <el-table-column prop="category" label="测点类别">
+            <template #default="scope">
+              <el-input v-model="scope.row.category" :disabled="true"></el-input>
+            </template>
+          </el-table-column>
+        </el-table>
+
+        <!-- 分页 -->
+        <div class="pagination-container">
+          <el-pagination
+            background
+            layout="prev, pager, next"
+            :page-size="20"
+            :total="1"
+            style="margin-top: 20px; text-align: right"
+          >
+          </el-pagination>
+        </div>
+      </div>
+    </template>
+
+    <!-- Step 4: Operating Mode Configuration -->
+    <template v-if="activeStep === 3"> </template>
+
+    <!-- Step 5: Training Sample Selection -->
+    <template v-if="activeStep === 4"> </template>
+
+    <!-- Step 6: Model Training -->
+    <template v-if="activeStep === 5"> </template>
+
+    <!-- Actions -->
+    <div class="span-container"></div>
+    <div class="button-container">
+      <el-button v-if="activeStep > 0" type="primary" @click="prevStep">上一步</el-button>
+      <el-button v-if="activeStep < 5" type="primary" @click="nextStep">下一步</el-button>
+      <el-button v-if="activeStep === 5" type="primary" @click="confirm">确定</el-button>
+      <el-button type="primary" @click="save">暂存</el-button>
+      <el-button type="primary" @click="close">关闭</el-button>
+    </div>
   </div>
 </template>
 
-<style>
+<style scoped>
 .span-container {
   display: flex;
   align-items: center;
@@ -370,15 +292,6 @@ const confirm = () => {
   padding: 10px;
   background-color: white;
   height: 100%;
-}
-.form-content {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-.el-form-item {
-  flex: 1 1 calc(50% - 10px); /* 每行两个表单项 */
-  box-sizing: border-box;
 }
 .button {
   display: flex;
